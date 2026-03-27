@@ -62,6 +62,26 @@ A modern, dark-themed Inventory and Invoicing System built with Next.js and Fire
    npm run dev
    ```
 
+### CI/CD with GitHub Actions
+
+This project is set up with GitHub Actions to automatically deploy to Firebase Hosting.
+
+1.  **Generate a Service Account Key**:
+    - In the **Firebase Console**, go to **Project Settings** -> **Service accounts**.
+    - Click **Generate new private key**.
+2.  **Add Secrets to GitHub**:
+    - In your GitHub repository, go to **Settings** -> **Secrets and variables** -> **Actions**.
+    - Add the following secrets:
+      - `FIREBASE_SERVICE_ACCOUNT_IMSBETA1_2`: (The JSON content of the service account key you just downloaded).
+      - `NEXT_PUBLIC_FIREBASE_API_KEY`: (From your `.env.local`).
+      - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`: (From your `.env.local`).
+      - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: (From your `.env.local`).
+      - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`: (From your `.env.local`).
+      - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`: (From your `.env.local`).
+      - `NEXT_PUBLIC_FIREBASE_APP_ID`: (From your `.env.local`).
+
+Now, every time you push to the `master` branch, your app will automatically deploy to the live site. Pull requests will generate preview links!
+
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
