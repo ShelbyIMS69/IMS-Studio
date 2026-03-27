@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
-  LayoutGrid, 
+  LayoutDashboard, 
   Package, 
   Users, 
   FileText, 
   TrendingUp, 
-  Users as UserIcon, 
+  UserCog, 
   Hash, 
   Settings,
   LogOut
@@ -17,12 +17,12 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutGrid },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Products", href: "/products", icon: Package },
   { name: "Customers", href: "/customers", icon: Users },
   { name: "Invoices", href: "/invoices", icon: FileText },
   { name: "Sales", href: "/sales", icon: TrendingUp },
-  { name: "Users", href: "/users", icon: UserIcon, adminOnly: true },
+  { name: "Users", href: "/users", icon: UserCog, adminOnly: true },
   { name: "Serial Tracking", href: "/serial-tracking", icon: Hash },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
