@@ -38,33 +38,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Set persistence to local (keeps user logged in on refresh)
-    setPersistence(auth, browserLocalPersistence);
+    // Check if Firebase config is available
+    if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+      setError("Firebase API Key is missing. Please set up your .env.local file or GitHub Secrets.");
+      setLoading(false);
+      return;
+    }
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      if (firebaseUser) {
-        // Fetch user profile from Firestore
-        const docRef = doc(db, "users", firebaseUser.uid);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          setProfile(docSnap.data() as UserProfile);
+    // Set persistence to local (keeps user logged in on refresh)
+    try {
+      setPersistence(auth, browserLocalPersistence);
+
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        setUser(firebaseUser);
+        if (firebaseUser) {
+          try {
+            // Fetch user profile from Firestore
+            const docRef = doc(db, "users", firebaseUser.uid);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+              setProfile(docSnap.data() as UserProfile);
+            } else {
+              setProfile(null);
+            }
+          } catch (err: any) {
+            console.error("Error fetching profile:", err);
+          }
         } else {
-          // If profile doesn't exist but user is authenticated, 
-          // this might be the first admin login.
-          // We'll handle initial admin creation elsewhere or here.
           setProfile(null);
         }
-      } else {
-        setProfile(null);
-      }
-      setLoading(false);
-    });
+        setLoading(false);
+      });
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    } catch (err: any) {
+      setError(err.message);
+      setLoading(false);
+    }
   }, []);
 
   const login = async (username: string, password: string) => {
@@ -78,7 +92,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, profile, loading, login, logout }}>
-      {children}
+      {error ? (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 text-center">
+          <div className="bg-destructive/10 border border-destructive/20 p-6 rounded-lg max-w-md">
+            <h2 className="text-xl font-bold text-destructive mb-2">Configuration Error</h2>
+            <p className="text-muted-foreground text-sm mb-4">{error}</p>
+            <p className="text-xs text-muted-foreground">
+              Follow the instructions in the README to set up your Firebase environment variables.
+            </p>
+          </div>
+        </div>
+      ) : children}
     </AuthContext.Provider>
   );
 }
