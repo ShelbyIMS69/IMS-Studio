@@ -1,0 +1,74 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if the user is signed in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper function to get the user's data from the 'users' collection
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Helper function to check if the user is an admin
+    function isAdmin() {
+      return isSignedIn() && getUserData().role == 'admin';
+    }
+
+    // Helper function to check if the user is an admin OR a regular user
+    function isAnyRole() {
+      return isSignedIn() && (getUserData().role == 'admin' || getUserData().role == 'user');
+    }
+
+    // Rules for the 'users' collection
+    match /users/{userId} {
+      // Admins can manage all users.
+      // Individual users can read their own profile.
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // Rules for the 'products' collection
+    match /products/{productId} {
+      // Authenticated users can read products.
+      // Only admins can add, edit, or delete products.
+      allow read: if isAnyRole();
+      allow write: if isAdmin();
+    }
+
+    // Rules for the 'customers' collection
+    match /customers/{customerId} {
+      // Authenticated users can read and create customers.
+      // Only admins can delete customers.
+      allow read, create, update: if isAnyRole();
+      allow delete: if isAdmin();
+    }
+
+    // Rules for the 'invoices' collection
+    match /invoices/{invoiceId} {
+      // Authenticated users can read, create, and update invoices.
+      // Only admins can delete invoices.
+      allow read, create, update: if isAnyRole();
+      allow delete: if isAdmin();
+    }
+
+    // Rules for the 'serial_tracking' collection
+    match /serial_tracking/{serialId} {
+      // Authenticated users can read and create serial tracking records.
+      // Only admins can delete.
+      allow read, create: if isAnyRole();
+      allow update, delete: if isAdmin();
+    }
+
+    // Rules for the 'variations' collection
+    match /variations/{variationId} {
+      // Authenticated users can read variations.
+      // Only admins can manage variations.
+      allow read: if isAnyRole();
+      allow write: if isAdmin();
+    }
+  }
+}
